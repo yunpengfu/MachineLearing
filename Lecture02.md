@@ -30,6 +30,59 @@ K-邻居算法的伪代码：
 4. 确定前k个点所在类别出现的频率；
 5. 返回前k个点出现频率最高的类别作为当前点的预测分类。
 
+# k-临近算法 代码
+1. Python导入数据
+```
+   from numpy import *
+   import operator
+   # 导入科学计算包numpy和运算符模块operator
+   
+   def createDataSet():
+      group = array([[1.0, 1.1], [1.0, 1.0], [0, 0], [0, 0.1]])
+      labels = ['A', 'A', 'B', 'B']
+      return group, labels
+```
+createDataSet()函数，创建数据集和标签。  
+调用方式：
+> import kNN  
+> group, labels = kNN.createDataSet()
+2. kNN算法
+```
+   def classify0(inX, dataSet, labels, k):
+      # inX 用于分类的输入向量
+      # dataSet 输入的样本训练集
+      # labels标签向量
+      # k 用于选择最近邻居数目
+      dataSetSize = dataSet.shape[0]   # ".shape[0]"输出行数,".shape[1]"输出列数
+      diffMat = tile(inX, (dataSetSize,1)) - dataSet  # 在列方向上重复inX一次，行dataSetSize次
+      """
+       diffMat 为欧氏距离： 点到点之间的距离
+       第一行： 同一个点 到 dataSet的第一个点的距离。
+       第二行： 同一个点 到 dataSet的第二个点的距离。
+       ...
+       第N行： 同一个点 到 dataSet的第N个点的距离。
+      [ [2,3],[2,3] ]-[ [2,3],[2,0] ]  # [ [x-x1,y-y1],[x-x2,y-y2] ]
+      """
+      sqDiffMat = diffMat**2  # 取平方 [x-x1,y-y1]^2 + [x-x2,y-y2]^2
+      sqDistances = sqDiffMat.sum(axis=1) # 将矩阵的每一行相加
+      distances = sqDistances ** 0.5   # 开方 { [x-x1,y-y1]^2 + [x-x2,y-y2]^2 }^0.5
+      sortedDistIndicies = distances.argsort()  # 根据距离排序从小到大的排序，返回对应的索引位置
+      classCount = {}   # 定义一个元组
+      for i in range(k):
+        voteIlabel = labels[sortedDistIndicies[i]] # 找到该样本的类型
+        classCount[voteIlabel] = classCount.get(voteIlabel, 0) + 1   # 计数
+      sortedClassCount = sorted(classCount.items(), key=operator.itemgetter(1), reverse=True)、
+      """
+      字典的 items() 方法，以列表返回可遍历的(键，值)元组数组。
+      例如：dict = {'Name': 'Zara', 'Age': 7}   print "Value : %s" %  dict.items()   Value : [('Age', 7), ('Name', 'Zara')]
+      sorted 中的第2个参数 key=operator.itemgetter(1) 这个参数的意思是先比较第几个元素
+      例如：a=[('b',2),('a',1),('c',0)]  b=sorted(a,key=operator.itemgetter(1)) >>>b=[('c',0),('a',1),('b',2)] 可以看到排序是按照后边的0,1,2（即按照的是元组的值）进行排序的，而不是a,b,c
+      b=sorted(a,key=operator.itemgetter(0)) >>>b=[('a',1),('b',2),('c',0)] 这次比较的是前边的a,b,c（即比较的是元组的键）而不是0,1,2
+      b=sorted(a,key=opertator.itemgetter(1,0)) >>>b=[('c',0),('a',1),('b',2)] 这个是先比较第2个元素，然后对第一个元素进行排序，形成多级排序。
+      """
+      return sortedClassCount[0][0]      
+```
+
 
 
 
