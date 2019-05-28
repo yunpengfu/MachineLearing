@@ -83,6 +83,11 @@ createDataSet()函数，创建数据集和标签。
       return sortedClassCount[0][0]      
 ```
 
+# 应用示例
+## 优化约会网站的配对效果
+
+## 手写数字识别系统
+
 
 
 
