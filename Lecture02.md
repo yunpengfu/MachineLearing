@@ -85,7 +85,56 @@ createDataSet()函数，创建数据集和标签。
 
 # 应用示例
 ## 优化约会网站的配对效果
-
+### 项目概述
+海伦使用约会网站寻找约会对象。经过一段时间之后，她发现曾交往过三种类型的人:
+* 不喜欢的人
+* 魅力一般的人
+* 极具魅力的人
+海伦收集了主要包含以下3种特征的约会数据（保存在datingTestSet2.txt中）：
+1. 每年获得的飞行常客里程数
+2. 玩视频游戏所耗时间百分比
+3. 每周消费的冰淇淋公升数
+### 示例：在约会网站上使用k-临近算法
+> 收集数据：提供文本文件  
+准备数据：使用 Python 解析文本文件  
+分析数据：使用 Matplotlib 画二维散点图  
+训练算法：此步骤不适用于 k-近邻算法  
+测试算法：使用海伦提供的部分数据作为测试样本。  
+&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;测试样本和非测试样本的区别在于：测试样本是已经完成分类的数据，如果预测分类与实际类别不同，则标记为一个错误。  
+使用算法：产生简单的命令行程序，然后海伦可以输入一些特征数据以判断对方是否为自己喜欢的类型。
+### 代码
+1. 使用 Python 解析文本文件，将文本记录转换为 NumPy 的解析程序
+```
+def file2matrix(filename):
+   fr = open(filename)
+   numberOfLines = len(fr.readlines()) # 获得文件中的数据行的行数
+   returnMat = zeros((numberOfLines, 3))  # 生成对应的空矩阵,例如：zeros(2，3)就是生成一个2*3的矩阵，各个位置上全是0，此矩阵即为返回的矩阵
+   classLabelVector = []  # 此矩阵为返回的标签矩阵
+   index = 0
+   for line in fr.readlines():
+       line = line.strip() # str.strip([chars]),返回已移除字符串头尾指定字符所生成的新字符串
+       listFromLine = line.split('\t') # 以 '\t' 切割字符串
+       ```
+         eg.
+         txt = "Google#Runoob#Taobao#Facebook"
+         x = txt.split("#")
+         output:
+         ['Google','Runoob','Taobao','Facebook']
+       ```
+       returnMat[index, :] = listFromLine[0:3]  # 每行的属性数据
+       ```
+         eg.
+         jj = [ [1,2,3],[8,8,8] ]
+         jj[1,:]  # 取出jj第1行元素
+         output：
+         [ [8,8,8] ]
+       ```
+       classLabelVector.append(int(listFromLine[-1])) # 每列的类别数据，就是 label 标签数据
+       index += 1
+   return returnMat, classLabelVector  # 返回数据矩阵returnMat和对应的类别classLabelVector
+   
+```
+2. 分析数据：使用 Matplotlib 画二维散点图
 ## 手写数字识别系统
 
 
