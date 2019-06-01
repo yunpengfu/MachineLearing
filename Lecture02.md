@@ -132,9 +132,72 @@ def file2matrix(filename):
        classLabelVector.append(int(listFromLine[-1])) # 每列的类别数据，就是 label 标签数据
        index += 1
    return returnMat, classLabelVector  # 返回数据矩阵returnMat和对应的类别classLabelVector
-   
 ```
-2. 分析数据：使用 Matplotlib 画二维散点图
+2. 归一化数据
+归一化是一个让权重变为统一的过程，更多细节请参考： <https://www.zhihu.com/question/19951858/>  
+归一化定义： 我是这样认为的，归一化就是要把你需要处理的数据经过处理后（通过某种算法）限制在你需要的一定范围内。首先归一化是为了后面数据处理的方便，其次是保正程序运行时收敛加快。
+归一化方法有如下：  
+a. 线性函数转换，表达式如下：  
+y=(x-MinValue)/(MaxValue-MinValue)  
+说明：x、y分别为转换前、后的值，MaxValue、MinValue分别为样本的最大值和最小值。  
+b. 对数函数转换，表达式如下：  
+y=log10(x)  
+说明：以10为底的对数函数转换。  
+如图：  
+![对数函数转换](https://github.com/apachecn/AiLearning/blob/master/img/ml/2.KNN/knn_1.png "对数函数转换")
+c. 反余切函数转换，表达式如下：  
+y=arctan(x)*2/PI  
+如图：  
+![反余切函数转换](https://github.com/apachecn/AiLearning/blob/master/img/ml/2.KNN/arctan_arccot.gif "反余切函数转换")
+d. 式(1)将输入值换算为[-1,1]区间的值，在输出层用式(2)换算回初始值，其中和分别表示训练样本集中负荷的最大值和最小值。  
+```
+   def autoNorm(dataSet):
+    # 归一化公式：Y = (X-Xmin)/(Xmax-Xmin)
+    minVals = dataSet.min(0)  # 返回该矩阵中每一列的最小值
+    maxVals = dataSet.max(0)  # 计算每种属性的最大值、最小值、范围
+    ranges = maxVals - minVals   # 极差
+    normDataSet = zeros(shape(dataSet))
+    m = dataSet.shape[0] # 行数
+    normDataSet = dataSet - tile(minVals, (m, 1))   # 生成与最小值之差组成的矩阵
+    normDataSet = normDataSet / tile(ranges, (m, 1))  # 将最小值之差除以范围组成矩阵
+    return normDataSet, ranges, minVals
+```
+3. 分类器针对约会网站的测试代码
+```
+   def datingClassTest():
+    # 设置测试数据的的一个比例（训练数据集比例=1-hoRatio）
+    hoRatio = 0.1  # 测试范围,一部分测试一部分作为样本
+    # 从文件中加载数据
+    datingDataMat, datingLabels = file2matrix('data/2.KNN/datingTestSet2.txt')  # load data setfrom file
+    # 归一化数据
+    normMat, ranges, minVals = autoNorm(datingDataMat)
+    # m 表示数据的行数，即矩阵的第一维
+    m = normMat.shape[0]
+    # 设置测试的样本数量， numTestVecs:m表示训练样本的数量
+    numTestVecs = int(m * hoRatio)
+    print 'numTestVecs=', numTestVecs
+    errorCount = 0.0
+    for i in range(numTestVecs):
+        # 对数据测试
+        classifierResult = classify0(normMat[i, :], normMat[numTestVecs:m, :], datingLabels[numTestVecs:m], 3)
+        print "the classifier came back with: %d, the real answer is: %d" % (classifierResult, datingLabels[i])
+        if (classifierResult != datingLabels[i]): errorCount += 1.0
+    print "the total error rate is: %f" % (errorCount / float(numTestVecs))
+    print errorCount
+```
+4. 约会网站测试函数
+```
+   def classifyPerson():
+    resultList = ['not at all', 'in small doses', 'in large doses']
+    percentTats = float(raw_input("percentage of time spent playing video games ?"))
+    ffMiles = float(raw_input("frequent filer miles earned per year?"))
+    iceCream = float(raw_input("liters of ice cream consumed per year?"))
+    datingDataMat, datingLabels = file2matrix('datingTestSet2.txt')
+    normMat, ranges, minVals = autoNorm(datingDataMat)
+    inArr = array([ffMiles, percentTats, iceCream])
+    classifierResult = classify0((inArr-minVals)/ranges,normMat,datingLabels, 3)
+    print "You will probably like this person: ", resultList[classifierResult - 1]
+```
 ## 手写数字识别系统
 
 
