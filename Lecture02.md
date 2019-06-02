@@ -167,14 +167,10 @@ d. 式(1)将输入值换算为[-1,1]区间的值，在输出层用式(2)换算�
    def datingClassTest():
     # 设置测试数据的的一个比例（训练数据集比例=1-hoRatio）
     hoRatio = 0.1  # 测试范围,一部分测试一部分作为样本
-    # 从文件中加载数据
-    datingDataMat, datingLabels = file2matrix('data/2.KNN/datingTestSet2.txt')  # load data setfrom file
-    # 归一化数据
-    normMat, ranges, minVals = autoNorm(datingDataMat)
-    # m 表示数据的行数，即矩阵的第一维
-    m = normMat.shape[0]
-    # 设置测试的样本数量， numTestVecs:m表示训练样本的数量
-    numTestVecs = int(m * hoRatio)
+    datingDataMat, datingLabels = file2matrix('data/2.KNN/datingTestSet2.txt')  # 从文件中加载数据
+    normMat, ranges, minVals = autoNorm(datingDataMat)   # 归一化数据
+    m = normMat.shape[0]   # m 表示数据的行数，即矩阵的第一维
+    numTestVecs = int(m * hoRatio)  # 设置测试的样本数量， numTestVecs:m表示训练样本的数量
     print 'numTestVecs=', numTestVecs
     errorCount = 0.0
     for i in range(numTestVecs):
@@ -199,8 +195,54 @@ d. 式(1)将输入值换算为[-1,1]区间的值，在输出层用式(2)换算�
     print "You will probably like this person: ", resultList[classifierResult - 1]
 ```
 ## 手写数字识别系统
+### 项目概述
+构造一个能识别数字 0 到 9 的基于 KNN 分类器的手写数字识别系统。  
+需要识别的数字是存储在文本文件中的具有相同的色彩和大小：宽高是 32 像素 * 32 像素的黑白图像。
+目录 trainingDigits 中包含了大约 2000 个例子，每个例子内容如下图所示，每个数字大约有 200 个样本；目录 testDigits 中包含了大约 900 个测试数据。  
+![手写数字示例](https://raw.githubusercontent.com/apachecn/AiLearning/master/img/ml/2.KNN/knn_2_handWriting.png "手写数字示例")
+### 代码
+1. 将图像文本数据转换为分类器使用的向量
+```
+   def img2vector(filename):
+      returnVect = zeros((1,1024))
+      fr = open(filename)
+      for i in range(32):
+         lineStr = fr.readline()
+         for j in range(32):
+            returnVect[0,32*i+j] = int(lineStr[j]) # 第0行，第32*i+j列
+      return returnVect # 将32*32的二进制图像矩阵转换为1*1024的向量
+```
+2. 手写数字识别系统的测试代码
+```
+   def handwritingClassTest():
+    # 1. 导入训练数据
+    hwLabels = []
+    trainingFileList = listdir('data/2.KNN/trainingDigits')  # load the training set
+    m = len(trainingFileList)
+    trainingMat = zeros((m, 1024))
+    # hwLabels存储0～9对应的index位置， trainingMat存放的每个位置对应的图片向量
+    for i in range(m):
+        fileNameStr = trainingFileList[i]
+        fileStr = fileNameStr.split('.')[0]  # take off .txt
+        classNumStr = int(fileStr.split('_')[0])
+        hwLabels.append(classNumStr)
+        # 将 32*32的矩阵->1*1024的矩阵
+        trainingMat[i, :] = img2vector('data/2.KNN/trainingDigits/%s' % fileNameStr)
 
-
-
+    # 2. 导入测试数据
+    testFileList = listdir('data/2.KNN/testDigits')  # iterate through the test set
+    errorCount = 0.0
+    mTest = len(testFileList)
+    for i in range(mTest):
+        fileNameStr = testFileList[i]
+        fileStr = fileNameStr.split('.')[0]  # take off .txt
+        classNumStr = int(fileStr.split('_')[0])
+        vectorUnderTest = img2vector('data/2.KNN/testDigits/%s' % fileNameStr)
+        classifierResult = classify0(vectorUnderTest, trainingMat, hwLabels, 3)
+        print "the classifier came back with: %d, the real answer is: %d" % (classifierResult, classNumStr)
+        if (classifierResult != classNumStr): errorCount += 1.0
+    print "\nthe total number of errors is: %d" % errorCount
+    print "\nthe total error rate is: %f" % (errorCount / float(mTest))
+```
 
 
