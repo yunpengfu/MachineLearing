@@ -85,7 +85,8 @@
     <td>是</td>
     <td>否</td>
   </tr>
-</table>
+</table>  
+
 1. 构造表3-1所示简单鱼鉴定数据集createDataSet()函数：
 ```
   def createDataSet():
@@ -96,8 +97,7 @@
                [0, 1, 'no']]
     labels = ['no surfacing', 'flippers']
     return dataSet, labels
-```
-
+```  
 2. 函数calcShannonEnt(dataSet)计算给定数据集的香农熵：  
 计算香农熵的公式：H = -求和（i=1，2，3……n）p（Xi）log2p（Xi）
 ```
