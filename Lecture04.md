@@ -47,4 +47,92 @@
 测试算法: 计算错误率。  
 使用算法: 一个常见的朴素贝叶斯应用是文档分类。可以在任意的分类场景中使用朴素贝叶斯分类器，不一定非要是文本。  
 
+## 朴素贝叶斯算法 代码
+1. 词表到向量的转换：
+```
+  def loadDataSet():    # 创建数据集
+    postingList = [['my', 'dog', 'has', 'flea', 'problems', 'help', 'please'], #[0,0,1,1,1......]
+                   ['maybe', 'not', 'take', 'him', 'to', 'dog', 'park', 'stupid'],
+                   ['my', 'dalmation', 'is', 'so', 'cute', 'I', 'love', 'him'],
+                   ['stop', 'posting', 'stupid', 'worthless', 'garbage'],
+                   ['mr', 'licks', 'ate', 'my', 'steak', 'how', 'to', 'stop', 'him'],
+                   ['quit', 'buying', 'worthless', 'dog', 'food', 'stupid']]
+    classVec = [0, 1, 0, 1, 0, 1]  # 1 is abusive, 0 not
+    return postingList, classVec
+    
+  def createVocabList(dataSet):     # 用set数据类型，创建不包含重复词的列表
+    vocabSet = set([])  # create empty set
+    for document in dataSet:
+        vocabSet = vocabSet | set(document)  # 操作符 | 用于求两个集合的并集
+    return list(vocabSet)
+    
+  def setOfWords2Vec(vocabList, inputSet):
+    # 创建一个和词汇表等长的向量，并将其元素都设置为0
+    returnVec = [0] * len(vocabList)   # [0,0......]
+    # 遍历文档中的所有单词，如果出现了词汇表中的单词，则将输出的文档向量中的对应值设为1
+    for word in inputSet:
+        if word in vocabList:
+            returnVec[vocabList.index(word)] = 1
+        else:
+            print("the word: %s is not in my Vocabulary!" % word)
+    return returnVec
+    
+  def bagOfWords2VecMN(vocabList, inputSet):    # 朴素贝叶斯词袋模型
+    returnVec = [0] * len(vocabList)
+    for word in inputSet:
+        if word in vocabList:
+            returnVec[vocabList.index(word)] += 1
+    return returnVec
+```
+2. 朴素贝叶斯分类器训练函数trainNB0()：
+```
+  def trainNB0(trainMatrix, trainCategory):
+    numTrainDocs = len(trainMatrix) # 总文件数
+    numWords = len(trainMatrix[0])  # 总单词数
+    pAbusive = sum(trainCategory) / float(numTrainDocs) # 侮辱性文件的出现概率
+    # 避免单词列表中的任何一个单词为0，而导致最后的乘积为0，所以将每个单词的出现次数初始化为 1
+    p0Num = ones(numWords)  # 正常的统计，[0,0......]->[1,1,1,1,1.....]
+    p1Num = ones(numWords)  # 侮辱的统计
+    # 整个数据集单词出现总数，2.0根据样本/实际调查结果调整分母的值（2主要是避免分母为0，当然值可以调整
+    p0Denom = 2.0   # 正常的统计
+    p1Denom = 2.0   # 侮辱的统计
+    for i in range(numTrainDocs):
+        if trainCategory[i] == 1:
+            p1Num += trainMatrix[i] # 累加辱骂词的频次
+            p1Denom += sum(trainMatrix[i])  # 对每篇文章的辱骂的频次 进行统计汇总
+        else:
+            p0Num += trainMatrix[i]
+            p0Denom += sum(trainMatrix[i])
+    # 类别1，即侮辱性文档的[log(P(F1|C1)),log(P(F2|C1)),log(P(F3|C1)),log(P(F4|C1)),log(P(F5|C1))....]列表
+    p1Vect = log(p1Num / p1Denom)
+    # 类别0，即正常文档的[log(P(F1|C0)),log(P(F2|C0)),log(P(F3|C0)),log(P(F4|C0)),log(P(F5|C0))....]列表
+    p0Vect = log(p0Num / p0Denom)
+    return p0Vect, p1Vect, pAbusive
+```
+3. 朴素贝叶斯分类函数：
+```
+  def classifyNB(vec2Classify, p0Vec, p1Vec, pClass1):
+    p1 = sum(vec2Classify * p1Vec) + log(pClass1)
+    p0 = sum(vec2Classify * p0Vec) + log(1.0 - pClass1)
+    if p1 > p0:
+        return 1
+    else:
+    return 0
+  def testingNB():
+    listOPosts, listClasses = loadDataSet() # 1. 加载数据集
+    myVocabList = createVocabList(listOPosts)   # 2. 创建单词集合
+    trainMat = []   # 3. 计算单词是否出现并创建数据矩阵
+    for postinDoc in listOPosts:    # 返回m*len(myVocabList)的矩阵， 记录的都是0，1信息
+        trainMat.append(setOfWords2Vec(myVocabList, postinDoc))
+    p0V, p1V, pAb = trainNB0(array(trainMat), array(listClasses))   # 4. 训练数据
+    testEntry = ['love', 'my', 'dalmation'] # 5. 测试数据
+    thisDoc = array(setOfWords2Vec(myVocabList, testEntry))
+    print(testEntry, 'classified as: ', classifyNB(thisDoc, p0V, p1V, pAb))
+    testEntry = ['stupid', 'garbage']
+    thisDoc = array(setOfWords2Vec(myVocabList, testEntry))
+    print(testEntry, 'classified as: ', classifyNB(thisDoc, p0V, p1V, pAb))
+```
 
+## 应用示例
+### 使用朴素贝叶斯过滤垃圾邮件
+### 使用朴素贝叶斯分类器从个人广告中获取区域倾向
