@@ -135,4 +135,110 @@
 
 ## 应用示例
 ### 使用朴素贝叶斯过滤垃圾邮件
+邮件在'MCIA_Code/Ch04/email/'文件夹中：
+```
+  def textParse(bigString):
+    import re
+    # 使用正则表达式来切分句子，其中分隔符是除单词、数字外的任意字符串
+    listOfTokens = re.split(r'\W*', bigString)
+    return [tok.lower() for tok in listOfTokens if len(tok) > 2]
+    
+  def spamTest():   # 对贝叶斯垃圾邮件分类器进行自动化处理。
+    docList = []
+    classList = []
+    fullText = []
+    for i in range(1, 26):      # 切分，解析数据，并归类为 1 类别
+        wordList = textParse(open('MCIA_Code/Ch04/email/pam/%d.txt' % i).read())
+        docList.append(wordList)
+        classList.append(1)
+        # 切分，解析数据，并归类为 0 类别
+        wordList = textParse(open('MCIA_Code/Ch04/email/ham/%d.txt' % i).read())
+        docList.append(wordList)
+        fullText.extend(wordList)
+        classList.append(0)    
+    vocabList = createVocabList(docList)    # 创建词汇表
+    trainingSet = range(50)
+    testSet = []
+    for i in range(10):     # 随机取 10 个邮件用来测试
+        # random.uniform(x, y) 随机生成一个范围为 x - y 的实数
+        randIndex = int(random.uniform(0, len(trainingSet)))
+        testSet.append(trainingSet[randIndex])
+        del(trainingSet[randIndex])
+    trainMat = []
+    trainClasses = []
+    for docIndex in trainingSet:
+        trainMat.append(setOfWords2Vec(vocabList, docList[docIndex]))
+        trainClasses.append(classList[docIndex])
+    p0V, p1V, pSpam = trainNB0(array(trainMat), array(trainClasses))
+    errorCount = 0
+    for docIndex in testSet:
+        wordVector = setOfWords2Vec(vocabList, docList[docIndex])
+        if classifyNB(array(wordVector), p0V, p1V, pSpam) != classList[docIndex]:
+            errorCount += 1
+    print('the errorCount is: ', errorCount)
+    print('the testSet length is :', len(testSet))
+    print('the error rate is :', float(errorCount)/len(testSet))
+```
 ### 使用朴素贝叶斯分类器从个人广告中获取区域倾向
+```
+  def calcMostFreq(vocabList,fullText):     #RSS源分类器及高频词去除函数
+    import operator
+    freqDict={}
+    for token in vocabList:  #遍历词汇表中的每个词
+        freqDict[token]=fullText.count(token)  #统计每个词在文本中出现的次数
+    sortedFreq=sorted(freqDict.iteritems(),key=operator.itemgetter(1),reverse=True)  #根据每个词出现的次数从高到底对字典进行排序
+    return sortedFreq[:30]   #返回出现次数最高的30个单词
+    
+    
+  def localWords(feed1,feed0):
+    import feedparser
+    docList=[];classList=[];fullText=[]
+    minLen=min(len(feed1['entries']),len(feed0['entries']))
+    for i in range(minLen):
+        wordList=textParse(feed1['entries'][i]['summary'])   #每次访问一条RSS源
+        docList.append(wordList)
+        fullText.extend(wordList)
+        classList.append(1)
+        wordList=textParse(feed0['entries'][i]['summary'])
+        docList.append(wordList)
+        fullText.extend(wordList)
+        classList.append(0)
+    vocabList=createVocabList(docList)
+    top30Words=calcMostFreq(vocabList,fullText)
+    for pairW in top30Words:
+        if pairW[0] in vocabList:vocabList.remove(pairW[0])    #去掉出现次数最高的那些词
+    trainingSet=range(2*minLen);testSet=[]
+    for i in range(20):
+        randIndex=int(random.uniform(0,len(trainingSet)))
+        testSet.append(trainingSet[randIndex])
+        del(trainingSet[randIndex])
+    trainMat=[];trainClasses=[]
+    for docIndex in trainingSet:
+        trainMat.append(bagOfWords2VecMN(vocabList,docList[docIndex]))
+        trainClasses.append(classList[docIndex])
+    p0V,p1V,pSpam=trainNB0(array(trainMat),array(trainClasses))
+    errorCount=0
+    for docIndex in testSet:
+        wordVector=bagOfWords2VecMN(vocabList,docList[docIndex])
+        if classifyNB(array(wordVector),p0V,p1V,pSpam)!=classList[docIndex]:
+            errorCount+=1
+    print('the error rate is:',float(errorCount)/len(testSet))
+    return vocabList,p0V,p1V
+
+
+  def getTopWords(ny,sf):       # 最具表征性的词汇显示函数
+    import operator
+    vocabList,p0V,p1V=localWords(ny,sf)
+    topNY=[];topSF=[]
+    for i in range(len(p0V)):
+        if p0V[i]>-6.0:topSF.append((vocabList[i],p0V[i]))
+        if p1V[i]>-6.0:topNY.append((vocabList[i],p1V[i]))
+    sortedSF=sorted(topSF,key=lambda pair:pair[1],reverse=True)
+    print("SF**SF**SF**SF**SF**SF**SF**SF**SF**SF**SF**SF**SF**SF**")
+    for item in sortedSF:
+        print(item[0])
+    sortedNY=sorted(topNY,key=lambda pair:pair[1],reverse=True)
+    print("NY**NY**NY**NY**NY**NY**NY**NY**NY**NY**NY**NY**NY**NY**")
+    for item in sortedNY:
+    print(item[0])
+```
